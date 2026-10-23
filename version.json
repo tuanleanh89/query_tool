@@ -1,0 +1,12 @@
+﻿{
+    "version":  "1.0",
+    "release_date":  "2026-10-23",
+    "changelog":  [
+                      "Cap nhat tinh nang va toi uu hoa hieu nang",
+                      "Tu dong dong bo va bao luu 100% lich su lam viec"
+                  ],
+    "download_urls":  {
+                          "chrome":  "https://raw.githubusercontent.com/vnpthis/query_tool/main/release_dist/query_tool_chrome.zip",
+                          "firefox":  "https://raw.githubusercontent.com/vnpthis/query_tool/main/release_dist/query_tool.xpi"
+                      }
+}
