@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "VNPT HIS SQL Query Tool",
+  "version": "1.1.2",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "tabs",
+    "scripting",
+    "activeTab",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://bvhungyen.vncare.vn/*",
+    "https://bvthaibinh.vncare.vn/*",
+    "https://bvdakhoa.vncare.vn/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "action": {
+    "default_title": "Mở bảng điều khiển SQL",
+    "default_icon": "icon_red.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://bvhungyen.vncare.vn/*",
+        "https://bvthaibinh.vncare.vn/*",
+        "https://bvdakhoa.vncare.vn/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "vnpthis-sql-query-tool@project.com"
+    }
+  }
+}

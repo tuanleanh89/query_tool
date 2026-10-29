@@ -1,0 +1,1676 @@
+﻿<!doctype html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8" />
+        <title>HIS SQL Console Pro</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <script src="sweetalert2.all.min.js"></script>
+        <link rel="icon" type="image/png" href="icon_red.png" />
+        <style>
+            :root {
+                --bg-app: #f1f3f4;
+                --bg-sidebar: #f8f9fa;
+                --border-color: #dee2e6;
+                --bg-card: #ffffff;
+                --bg-input: #ffffff;
+                --text-color: #212529;
+                --text-muted: #6c757d;
+                --bg-toolbar: #ffffff;
+                --bg-tab-bar: #f8f9fa;
+                --bg-tab-inactive: #e9ecef;
+                --bg-tab-active: #ffffff;
+                --text-tab-active: #0d6efd;
+                --bg-tab-pinned: #fff3cd;
+                --border-tab-pinned: #ffc107;
+                --text-tab-pinned: #856404;
+                --bg-tab-pinned-active: #ffeeba;
+            }
+
+            body.dark-mode {
+                --bg-app: #202124;
+                --bg-sidebar: #2f3033;
+                --border-color: #3e4042;
+                --bg-card: #2f3033;
+                --bg-input: #3c4043;
+                --text-color: #e8eaed;
+                --text-muted: #9aa0a6;
+                --bg-toolbar: #2f3033;
+                --bg-tab-bar: #2f3033;
+                --bg-tab-inactive: #3c4043;
+                --bg-tab-active: #202124;
+                --text-tab-active: #8ab4f8;
+                --bg-tab-pinned: #3a321d;
+                --border-tab-pinned: #d39e00;
+                --text-tab-pinned: #ffe082;
+                --bg-tab-pinned-active: #4a3f25;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+                font-family: sans-serif;
+            }
+
+            body {
+                display: flex;
+                flex-direction: row;
+                padding: 8px;
+                gap: 8px;
+                background: var(--bg-app);
+                color: var(--text-color);
+            }
+
+            h3, #sidebarTitle {
+                color: var(--text-color);
+            }
+
+            h3 {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+
+            .sidebar {
+                width: 280px;
+                background: var(--bg-sidebar);
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                display: flex;
+                flex-direction: column;
+                flex-shrink: 0;
+                transition: width 0.3s ease;
+                overflow: hidden;
+            }
+
+            .sidebar.collapsed {
+                width: 58px;
+            }
+
+            .sidebar-header {
+                padding: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 10px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .sidebar.collapsed .sidebar-header {
+                justify-content: center;
+                padding: 12px 0;
+            }
+
+            .toggle-btn {
+                font-size: 1.5rem;
+                padding: 4px 8px;
+            }
+
+            .site-item {
+                padding: 10px 12px;
+                margin: 0 8px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 12px;
+                transition: all 0.2s ease;
+            }
+
+            .sidebar.collapsed .site-item {
+                justify-content: center;
+                padding: 10px 0;
+                margin: 0 8px;
+            }
+
+            .site-item:hover,
+            .site-item.active {
+                background: #e3f2fd;
+            }
+
+            body.dark-mode .site-item:hover,
+            body.dark-mode .site-item.active {
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+            }
+
+            .site-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .site-icon.hy {
+                background: #0d6efd;
+            }
+
+            .site-icon.tb {
+                background: #dc3545;
+            }
+
+            .sidebar.collapsed .site-name,
+            .sidebar.collapsed .title {
+                display: none;
+            }
+
+            .site-name {
+                color: var(--text-color);
+            }
+
+            .layout-controls-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .bottom-controls-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                padding-bottom: 8px;
+            }
+
+            .sidebar-unit-section,
+            .layout-controls-wrapper,
+            .bottom-controls-wrapper {
+                margin-top: 4px;
+                margin-bottom: 4px;
+            }
+
+            .sidebar-unit-expanded {
+                padding: 0 8px;
+            }
+
+            body .sidebar hr {
+                margin: 8px 8px !important;
+                border-top: 1px solid var(--border-color);
+                opacity: 0.3;
+            }
+
+            .layout-item {
+                padding: 10px 12px;
+                margin: 0 8px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 12px;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                color: var(--text-color);
+                transition: all 0.2s ease;
+            }
+
+            .layout-item.active {
+                background: #e3f2fd;
+                border-color: #0d6efd;
+                color: #0d6efd;
+                font-weight: 700;
+            }
+
+            .layout-item.active .layout-icon {
+                background: #0d6efd;
+                color: white;
+                border-color: #0d6efd;
+            }
+
+            body.dark-mode .layout-item.active {
+                background: rgba(13, 110, 253, 0.2);
+                border-color: #3b82f6;
+                color: #60a5fa;
+            }
+
+            body.dark-mode .layout-item.active .layout-icon {
+                background: #3b82f6;
+                color: white;
+                border-color: #3b82f6;
+            }
+
+            .layout-item:hover {
+                background: var(--bg-app);
+                border-color: var(--text-tab-active);
+                color: var(--text-tab-active);
+            }
+
+            .layout-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                background: var(--bg-tab-inactive);
+                color: var(--text-color);
+                border-color: var(--border-color);
+                flex-shrink: 0;
+                font-size: 1.1rem;
+                border: 1px solid #ced4da;
+            }
+
+            .layout-item:hover .layout-icon {
+                background: #0d6efd;
+                color: white;
+                border-color: #0d6efd;
+            }
+
+            .sidebar.collapsed .layout-item {
+                justify-content: center;
+                padding: 10px 0;
+                margin: 0 8px;
+                border: none;
+                background: transparent;
+            }
+
+            .layout-text {
+                font-size: 13px;
+            }
+
+            .sidebar.collapsed .layout-text {
+                display: none;
+            }
+
+            .sidebar.collapsed .layout-item:hover .layout-icon {
+                box-shadow: 0 0 8px rgba(13, 110, 253, 0.4);
+            }
+
+            .main-container {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            /* --- Session Tab Bar (Hàng 1: Phiên Làm Việc) --- */
+            .session-tab-bar {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                background: var(--bg-card);
+                border-bottom: 1px solid var(--border-color);
+                padding: 4px 8px;
+                flex-shrink: 0;
+                gap: 4px 6px;
+                min-height: 36px;
+                box-sizing: border-box;
+            }
+
+            .session-bar-left {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-muted);
+                letter-spacing: 0.5px;
+                white-space: nowrap;
+                padding-right: 6px;
+                border-right: 1px solid var(--border-color);
+                flex-shrink: 0;
+                user-select: none;
+            }
+
+            .session-tabs-container {
+                display: contents;
+            }
+
+            .session-tab {
+                padding: 3px 10px;
+                margin: 0;
+                background: var(--bg-tab-inactive);
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                cursor: pointer;
+                white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                color: var(--text-muted);
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                height: 28px;
+                line-height: 1;
+                flex-shrink: 0;
+                transition: all 0.15s ease;
+                box-sizing: border-box;
+                user-select: none;
+            }
+
+            .session-tab:hover {
+                background: var(--bg-tab-hover, rgba(0, 0, 0, 0.05));
+                color: var(--text-color);
+                border-color: rgba(13, 110, 253, 0.4);
+            }
+
+            .session-tab.active {
+                background: #0d6efd !important;
+                border-color: #0d6efd !important;
+                font-weight: 700;
+                color: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+            }
+
+            body.dark-mode .session-tab.active {
+                background: #1d4ed8 !important;
+                border-color: #3b82f6 !important;
+                color: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+            }
+
+            .session-tab-name {
+                max-width: 170px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                letter-spacing: -0.2px;
+            }
+
+            .session-tab-badge {
+                font-size: 10px;
+                font-weight: 700;
+                padding: 2px 6px;
+                border-radius: 10px;
+                background: rgba(108, 117, 125, 0.2);
+                color: var(--text-muted);
+                line-height: 1;
+            }
+
+            .session-tab.active .session-tab-badge {
+                background: rgba(255, 255, 255, 0.25);
+                color: #ffffff;
+            }
+
+            .session-tab-rename-btn {
+                font-size: 11px;
+                opacity: 0.6;
+                padding: 1px 3px;
+                border-radius: 3px;
+                transition: opacity 0.15s;
+                cursor: pointer;
+            }
+            .session-tab-rename-btn:hover {
+                opacity: 1;
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .session-tab-close-btn {
+                font-size: 14px;
+                line-height: 1;
+                font-weight: bold;
+                opacity: 0.6;
+                padding: 0 3px;
+                border-radius: 3px;
+                transition: all 0.15s;
+                cursor: pointer;
+            }
+            .session-tab-close-btn:hover {
+                opacity: 1;
+                background: rgba(255, 255, 255, 0.3);
+                color: #ffcccc;
+            }
+
+            .session-bar-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                flex-shrink: 0;
+                height: 28px;
+            }
+
+            .session-add-btn {
+                height: 26px;
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                padding: 0 8px;
+                font-size: 11.5px;
+                font-weight: 600;
+                border-radius: 4px;
+                white-space: nowrap;
+            }
+
+            /* --- Tab Bar (Hàng 2: Tab Con Trong Phiên) --- */
+            .tab-bar {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                background: var(--bg-tab-bar);
+                border-bottom: 1px solid var(--border-color);
+                padding: 3px 6px;
+                flex-shrink: 0;
+                gap: 3px 4px;
+            }
+
+            .tab-bar-left {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                font-size: 10.5px;
+                font-weight: 700;
+                color: var(--text-muted);
+                letter-spacing: 0.5px;
+                white-space: nowrap;
+                padding-right: 5px;
+                border-right: 1px solid var(--border-color);
+                flex-shrink: 0;
+                user-select: none;
+            }
+
+            .tabs-container {
+                display: contents;
+            }
+
+            .tab-bar-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                flex-shrink: 0;
+                white-space: nowrap;
+                height: 24px;
+            }
+
+            .tab-action-btn {
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                gap: 2px;
+                padding: 0 5px;
+                font-size: 11px;
+                font-weight: 500;
+                white-space: nowrap !important;
+                flex-shrink: 0;
+                border-radius: 4px;
+                line-height: 1;
+            }
+
+            body.dark-mode .tab-action-btn {
+                background: var(--bg-card);
+            }
+
+            .tab {
+                padding: 2px 7px;
+                margin: 0;
+                background: var(--bg-tab-inactive);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                cursor: pointer;
+                white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                color: var(--text-muted);
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                font-size: 11.5px;
+                font-weight: 500;
+                height: 24px;
+                line-height: 1;
+                flex-shrink: 0;
+                transition: all 0.15s ease;
+                box-sizing: border-box;
+            }
+
+            .tab-name {
+                white-space: nowrap;
+                letter-spacing: -0.2px;
+            }
+
+            .tab.active {
+                background: var(--bg-tab-active) !important;
+                border-color: var(--text-tab-active) !important;
+                border-top: 3px solid var(--text-tab-active) !important;
+                font-weight: bold;
+                color: var(--text-tab-active) !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            }
+
+            .tab.pinned {
+                background: var(--bg-tab-pinned) !important;
+                border-color: var(--border-tab-pinned) !important;
+                color: var(--text-tab-pinned) !important;
+            }
+
+            .tab.pinned.active {
+                background: var(--bg-tab-pinned-active) !important;
+                border-top: 3px solid var(--border-tab-pinned) !important;
+            }
+
+            .cell-copyable {
+                position: relative !important;
+            }
+
+            .cell-copyable:hover .btn-copy-cell {
+                display: inline-block !important;
+            }
+
+            .btn-copy-cell {
+                opacity: 0.8;
+            }
+
+            .btn-copy-cell:hover {
+                opacity: 1;
+                background-color: #e9ecef;
+            }
+
+            .tab .pin-tab {
+                font-size: 10px;
+                opacity: 0.45;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                padding: 0 1px;
+                line-height: 1;
+                flex-shrink: 0;
+            }
+
+            .tab .pin-tab:hover {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+
+            .tab.pinned .pin-tab {
+                opacity: 1;
+            }
+
+            .tab .close-tab {
+                margin-left: 2px;
+                font-size: 13px;
+                font-weight: 600;
+                line-height: 1;
+                opacity: 0.5;
+                flex-shrink: 0;
+                transition: all 0.15s ease;
+                padding: 0 3px;
+                border-radius: 3px;
+                color: var(--text-muted);
+            }
+
+            .tab .close-tab:hover {
+                opacity: 1;
+                color: white;
+                background-color: #dc3545;
+            }
+
+            .tab-add-btn {
+                height: 24px;
+                width: 24px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 15px;
+                flex-shrink: 0;
+                border-radius: 4px;
+                margin: 0;
+                line-height: 1;
+            }
+
+            #editor-wrapper {
+                height: 40%;
+                min-height: 120px;
+                border: 1px solid var(--border-color);
+                background: #fff;
+                flex-shrink: 0;
+            }
+
+            .resizer {
+                height: 10px;
+                flex-shrink: 0;
+                cursor: ns-resize;
+                background: var(--border-color);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                margin: 4px 0;
+                transition: 0.2s;
+                z-index: 20;
+            }
+
+            .resizer:hover {
+                background: #0d6efd;
+            }
+
+            .toolbar {
+                padding: 6px 0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex-shrink: 0;
+                border-bottom: 1px solid var(--border-color);
+                color: var(--text-color);
+            }
+
+            #status {
+                font-size: 0.85rem;
+                margin: 0;
+                flex-grow: 1;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            .grid-container {
+                flex-grow: 1;
+                overflow: auto;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                min-height: 0;
+            }
+
+            .bottom-status-bar {
+                display: flex;
+                align-items: center;
+                background: var(--bg-card);
+                border-top: 1px solid var(--border-color);
+                padding: 4px 12px;
+                font-size: 13px;
+                min-height: 26px;
+                color: var(--text-color);
+                flex-shrink: 0;
+            }
+
+            #resultTable {
+                table-layout: auto;
+                width: auto;
+                min-width: 100%;
+                color: var(--text-color);
+            }
+
+            #resultTable th,
+            #resultTable td {
+                border-color: var(--border-color);
+                white-space: nowrap;
+                max-width: 500px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding: 4px 8px;
+            }
+
+            thead {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            #btnFullSQL,
+            #btnFullGrid,
+            #btnResetLayout {
+                font-size: 0.85rem;
+                padding: 4px 10px;
+            }
+
+            body.dark-mode .modal-content {
+                background-color: var(--bg-card);
+                color: var(--text-color);
+                border-color: var(--border-color);
+            }
+
+            body.dark-mode .modal-header {
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            body.dark-mode .modal-header .btn-close {
+                filter: invert(1) grayscale(1) brightness(2);
+            }
+
+            body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+                background-color: var(--bg-app) !important;
+                color: var(--text-color) !important;
+            }
+
+            body.dark-mode .table-striped > tbody > tr:nth-of-type(even) > * {
+                background-color: var(--bg-card) !important;
+                color: var(--text-color) !important;
+            }
+
+            body.dark-mode .table-hover > tbody > tr:hover > * {
+                background-color: rgba(255, 255, 255, 0.075) !important;
+                color: var(--text-color) !important;
+            }
+
+            body.dark-mode select.form-select,
+            body.dark-mode input.form-control {
+                background-color: var(--bg-input) !important;
+                color: var(--text-color) !important;
+                border-color: var(--border-color) !important;
+            }
+
+            body.dark-mode .pagination-controls button {
+                background-color: var(--bg-card);
+                color: var(--text-color);
+                border-color: var(--border-color);
+            }
+
+            body.dark-mode .pagination-controls button:hover:not(:disabled) {
+                background-color: var(--bg-app);
+            }
+
+            body.dark-mode .pagination-controls button:disabled {
+                opacity: 0.5;
+            }
+
+            body.dark-mode #status {
+                color: var(--text-muted) !important;
+            }
+
+            body.dark-mode #status.text-success {
+                color: #81c995 !important;
+            }
+
+            body.dark-mode #status.text-danger {
+                color: #f28b82 !important;
+            }
+
+            body.dark-mode #status.text-primary {
+                color: #8ab4f8 !important;
+            }
+
+            #executionTime {
+                transition: color 0.2s ease;
+            }
+
+            body.dark-mode #executionTime {
+                color: var(--text-muted) !important;
+            }
+
+            body.dark-mode #executionTime.text-success {
+                color: #81c995 !important;
+            }
+
+            body.dark-mode #executionTime.text-danger {
+                color: #f28b82 !important;
+            }
+
+            body.dark-mode #executionTime.text-primary {
+                color: #8ab4f8 !important;
+            }
+
+            .recent-unit-badge {
+                cursor: pointer;
+                transition: all 0.15s ease;
+                white-space: nowrap;
+            }
+
+            .recent-unit-badge:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            body.dark-mode .recent-unit-badge {
+                background-color: var(--bg-card);
+                border-color: var(--border-color);
+                color: var(--text-color);
+            }
+
+            body.dark-mode .recent-unit-badge:hover,
+            body.dark-mode .recent-unit-badge.active {
+                background-color: #0d6efd;
+                border-color: #0d6efd;
+                color: #fff;
+            }
+
+            body.dark-mode hr {
+                background-color: var(--border-color);
+                opacity: 0.5;
+            }
+
+            #unitDropdownMenu {
+                border-color: var(--border-color);
+                background-color: var(--bg-card);
+            }
+
+            #unitDropdownMenu .dropdown-item {
+                font-size: 13px;
+                padding: 6px 12px;
+                color: var(--text-color);
+                white-space: normal;
+                word-break: break-word;
+                cursor: pointer;
+            }
+
+            #unitDropdownMenu .dropdown-item:hover,
+            #unitDropdownMenu .dropdown-item:focus {
+                background-color: #e3f2fd;
+                color: #0d6efd;
+            }
+
+            body.dark-mode #unitDropdownMenu .dropdown-item:hover,
+            body.dark-mode #unitDropdownMenu .dropdown-item:focus {
+                background-color: var(--bg-app);
+                color: #8ab4f8;
+            }
+
+            #sidebarUnitDropdownMenu {
+                border-color: var(--border-color);
+                background-color: var(--bg-card);
+            }
+
+            #sidebarUnitDropdownMenu .dropdown-item {
+                font-size: 12px;
+                padding: 6px 10px;
+                color: var(--text-color);
+                white-space: normal;
+                word-break: break-word;
+                cursor: pointer;
+            }
+
+            #sidebarUnitDropdownMenu .dropdown-item:hover,
+            #sidebarUnitDropdownMenu .dropdown-item:focus {
+                background-color: #e3f2fd;
+                color: #0d6efd;
+            }
+
+            body.dark-mode #sidebarUnitDropdownMenu .dropdown-item:hover,
+            body.dark-mode #sidebarUnitDropdownMenu .dropdown-item:focus {
+                background-color: var(--bg-app);
+                color: #8ab4f8;
+            }
+
+            .sidebar-unit-expanded {
+                display: block;
+            }
+
+            .sidebar-unit-collapsed {
+                display: none !important;
+            }
+
+            .sidebar.collapsed .sidebar-unit-expanded {
+                display: none !important;
+            }
+
+            .sidebar.collapsed .sidebar-unit-collapsed {
+                display: flex !important;
+            }
+
+            #sidebarCollapsedUnitDropdownMenu {
+                border-color: var(--border-color);
+                background-color: var(--bg-card);
+            }
+
+            #sidebarCollapsedUnitDropdownMenu .dropdown-item {
+                font-size: 12px;
+                padding: 6px 10px;
+                color: var(--text-color);
+                white-space: normal;
+                word-break: break-word;
+                cursor: pointer;
+            }
+
+            #sidebarCollapsedUnitDropdownMenu .dropdown-item:hover,
+            #sidebarCollapsedUnitDropdownMenu .dropdown-item:focus {
+                background-color: #e3f2fd;
+                color: #0d6efd;
+            }
+
+            body.dark-mode #sidebarCollapsedUnitDropdownMenu .dropdown-item:hover,
+            body.dark-mode #sidebarCollapsedUnitDropdownMenu .dropdown-item:focus {
+                background-color: var(--bg-app);
+                color: #8ab4f8;
+            }
+
+            .sidebar-unit-collapsed button:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+
+            .tab.run-tab {
+                background: #e0f7fa !important;
+                border-color: #00bcd4 !important;
+                color: #006064 !important;
+            }
+
+            .tab.run-tab.active {
+                background: #b2ebf2 !important;
+                border-width: 1.5px;
+            }
+
+            body.dark-mode .tab.run-tab {
+                background: #002f35 !important;
+                border-color: #00838f !important;
+                color: #e0f7fa !important;
+            }
+
+            body.dark-mode .tab.run-tab.active {
+                background: #004d40 !important;
+                border-width: 1.5px;
+            }
+
+            .btn-amber {
+                background-color: #ff9100;
+                border-color: #ff9100;
+                color: #fff;
+            }
+            .btn-amber:hover, .btn-amber:focus {
+                background-color: #ffab40;
+                border-color: #ffab40;
+                color: #fff;
+            }
+            body.dark-mode .btn-amber {
+                background-color: #ff6d00;
+                border-color: #ff6d00;
+                color: #fff;
+            }
+            body.dark-mode .btn-amber:hover, body.dark-mode .btn-amber:focus {
+                background-color: #ff9100;
+                border-color: #ff9100;
+                color: #fff;
+            }
+
+            .tab.proc-func-tab {
+                background: #f3e5f5 !important;
+                border-color: #ce93d8 !important;
+                color: #4a148c !important;
+            }
+            .tab.proc-func-tab.active {
+                background: #e1bee7 !important;
+                border-top: 3px solid #8e24aa !important;
+            }
+            body.dark-mode .tab.proc-func-tab {
+                background: #311b92 !important;
+                border-color: #5e35b1 !important;
+                color: #e040fb !important;
+            }
+            body.dark-mode .tab.proc-func-tab.active {
+                background: #4a148c !important;
+                border-top: 3px solid #e040fb !important;
+            }
+
+            body.dark-mode #pageInfo {
+                color: var(--text-muted) !important;
+            }
+
+            body.dark-mode .column-filter {
+                background-color: var(--bg-input) !important;
+                color: var(--text-color) !important;
+                border-color: var(--border-color) !important;
+            }
+
+            body.dark-mode .swal2-popup {
+                background-color: var(--bg-card) !important;
+                color: var(--text-color) !important;
+                border: 1px solid var(--border-color) !important;
+            }
+            body.dark-mode .swal2-title,
+            body.dark-mode .swal2-html-container {
+                color: var(--text-color) !important;
+            }
+            body.dark-mode .swal2-validation-message {
+                background-color: var(--bg-app) !important;
+                color: #f28b82 !important;
+            }
+
+            .tab.dragging {
+                opacity: 0.4;
+                border-style: dashed;
+            }
+        
+            .search-result-row {
+                cursor: pointer;
+                transition: background-color 0.15s ease;
+            }
+            .search-result-row:hover {
+                background-color: #e8f4fd !important;
+            }
+            body.dark-mode .search-result-row:hover {
+                background-color: #1e293b !important;
+            }
+            .search-result-match-line {
+                font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                font-size: 12px;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+            .search-result-match-line mark {
+                background-color: #fef08a;
+                color: #854d0e;
+                font-weight: bold;
+                padding: 1px 3px;
+                border-radius: 2px;
+            }
+            body.dark-mode .search-result-match-line mark {
+                background-color: #854d0e;
+                color: #fef08a;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="sidebar" class="sidebar collapsed">
+            <div class="sidebar-header">
+                <button id="btnToggleSidebar" class="toggle-btn">☰</button>
+                <span id="sidebarTitle" class="title fw-bold">HIS Query Tool</span>
+            </div>
+
+            <div class="d-flex flex-column gap-2 pt-2">
+                <div class="site-item active" data-site="hung_yen">
+                    <span class="site-icon hy">HY</span>
+                    <span class="site-name">Site Hưng Yên</span>
+                </div>
+                <div class="site-item" data-site="thai_binh">
+                    <span class="site-icon tb">TB</span>
+                    <span class="site-name">Site Thái Bình</span>
+                </div>
+            </div>
+
+            <hr class="mx-2 my-1 text-muted" />
+
+            <div class="sidebar-unit-section">
+                <div class="sidebar-unit-expanded">
+                    <div class="fw-bold mb-1 small text-muted sidebar-unit-title">ĐƠN VỊ HIỆN TẠI</div>
+                    <div class="position-relative mb-2">
+                        <input type="text" id="sidebarUnitSearchInput" class="form-control form-control-sm" placeholder="Tìm kiếm đơn vị..." autocomplete="off">
+                        <div id="sidebarUnitDropdownMenu" class="dropdown-menu w-100 shadow-sm" style="max-height: 200px; overflow-y: auto; display: none; z-index: 1050;"></div>
+                    </div>
+                    <div id="sidebarExpandedRecentSection" class="mb-2 p-1 border rounded bg-light-subtle">
+                        <div class="small text-muted fw-bold mb-1" id="sidebarExpandedRecentTitle" style="font-size: 11px;">🕒 Đơn vị gần nhất:</div>
+                        <div id="sidebarExpandedRecentBadges" class="d-flex flex-wrap gap-1" style="max-height: 70px; overflow-y: auto;"></div>
+                    </div>
+                    <div id="sidebarUnitInfo" class="p-2 border rounded mb-2" style="font-size: 12px; display: none; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-color);">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted">CSYTID:</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <strong id="sidebarUnitID" class="font-monospace"></strong>
+                                <button id="btnCopyID" class="btn btn-link p-0 text-decoration-none" title="Sao chép CSYTID" style="font-size: 13px;">📋</button>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Schema:</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <strong id="sidebarUnitSchema" class="font-monospace"></strong>
+                                <button id="btnCopySchema" class="btn btn-link p-0 text-decoration-none" title="Sao chép Schema" style="font-size: 13px;">📋</button>
+                            </div>
+                        </div>
+                        <button id="btnReplaceSqlPlaceholders" class="btn btn-sm btn-primary w-100 fw-bold" style="font-size: 11px;">
+                            🔄 Thay thế I_HID, I_SCH
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sidebar-unit-collapsed d-flex flex-column align-items-center gap-2">
+                    <button id="btnCollapsedSearchUnit" class="btn btn-sm btn-outline-secondary layout-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;" title="Chọn Đơn vị">
+                        🏢
+                    </button>
+                    <button id="btnCollapsedCopyID" class="btn btn-sm layout-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;" title="Copy CSYTID" disabled>
+                        🆔
+                    </button>
+                    <button id="btnCollapsedCopySchema" class="btn btn-sm layout-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;" title="Copy Schema" disabled>
+                        🌐
+                    </button>
+                    <button id="btnCollapsedReplaceSql" class="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;" title="Thay thế I_HID, I_SCH trong SQL" disabled>
+                        🔄
+                    </button>
+                </div>
+            </div>
+
+            <hr class="mx-2 my-1 text-muted" />
+
+            <div class="layout-controls-wrapper d-flex flex-column gap-2">
+                <div id="btnFullSQL" class="layout-item" title="Tối đa vùng SQL">
+                    <span class="layout-icon">↑</span>
+                    <span class="layout-text fw-semibold">Giao diện SQL</span>
+                </div>
+                <div id="btnFullGrid" class="layout-item" title="Tối đa vùng Kết quả">
+                    <span class="layout-icon">↓</span>
+                    <span class="layout-text fw-semibold">Giao diện Grid</span>
+                </div>
+                <div id="btnResetLayout" class="layout-item" title="Khôi phục mặc định">
+                    <span class="layout-icon">⟲</span>
+                    <span class="layout-text fw-semibold">Reset Layout</span>
+                </div>
+                <div id="btnCleanSql" class="layout-item" title="Clean SQL (Xóa comment, dòng trống)">
+                    <span class="layout-icon">🧹</span>
+                    <span class="layout-text fw-semibold">Clean SQL</span>
+                </div>
+            </div>
+
+            <hr class="mx-2 my-1 text-muted" />
+
+            <div class="bottom-controls-wrapper d-flex flex-column gap-2 pb-2">
+                <div id="btnSaveResultTable" class="layout-item" title="Lưu bảng kết quả truy vấn hiện tại">
+                    <span class="layout-icon">💾</span>
+                    <span class="layout-text fw-semibold">Lưu Kết Quả</span>
+                </div>
+                <div id="btnViewSavedTables" class="layout-item" title="Quản lý danh sách bảng kết quả đã lưu">
+                    <span class="layout-icon">📋</span>
+                    <span class="layout-text fw-semibold">Bảng Đã Lưu (<span id="savedTablesBadgeCount">0</span>)</span>
+                </div>
+                <div id="btnViewLogs" class="layout-item" title="Xem Nhật Ký Hoạt Động">
+                    <span class="layout-icon">📜</span>
+                    <span class="layout-text fw-semibold">Xem Nhật Ký</span>
+                </div>
+                <div id="statusJasperHelper" class="layout-item" title="Trạng thái Jasper Helper Server (Port 8080)">
+                    <span class="layout-icon" id="jasperHelperIcon">🟢</span>
+                    <span class="layout-text fw-semibold" id="jasperHelperText">Jasper: Sẵn sàng</span>
+                </div>
+                <div id="btnCheckUpdate" class="layout-item" title="Kiểm tra bản cập nhật mới nhất từ Cloud">
+                    <span class="layout-icon" id="updateIcon">🔄</span>
+                    <span class="layout-text fw-semibold" id="updateText">Cập Nhật</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-container">
+            <!-- Hàng 1: Tab To - Phiên làm việc (Session Tab Bar) -->
+            <div id="sessionTabBar" class="session-tab-bar">
+                <div class="session-bar-left">
+                    <span class="session-bar-icon">🗂️</span>
+                    <span class="session-bar-title">PHIÊN:</span>
+                </div>
+                <div id="sessionTabsContainer" class="session-tabs-container"></div>
+                <div class="session-bar-actions">
+                    <button id="btnAddSession" class="btn btn-outline-primary btn-sm session-add-btn" title="Tạo phiên làm việc mới">
+                        <span class="fw-bold">+</span> Phiên mới
+                    </button>
+                    <button id="btnSessionManager" class="btn btn-outline-secondary btn-sm session-action-btn" title="Quản lý danh sách các phiên làm việc đã lưu">
+                        <span>🗂️ Quản lý</span>
+                        <span id="sessionBadgeCount" class="badge bg-secondary text-white" style="font-size: 9.5px; padding: 2px 4px;">0</span>
+                    </button>
+                    <button id="btnHideSessionBar" class="btn btn-outline-secondary btn-sm session-action-btn" title="Ẩn dòng các tab phiên làm việc">
+                        <span>👁️ Ẩn phiên</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hàng 2: Tab Con - Các truy vấn trong phiên đang chọn (Sub Tab Bar) -->
+            <div id="tabBar" class="tab-bar">
+                <div class="tab-bar-left">
+                    <span class="sub-tab-icon">📑</span>
+                    <span class="sub-tab-title">TAB:</span>
+                    <button id="btnToggleSessionBar" class="btn btn-outline-secondary btn-sm tab-action-btn ms-1" title="Ẩn / Hiện dòng các tab phiên làm việc">
+                        <span id="sessionToggleIcon">🗂️</span> <span id="sessionToggleText">Phiên</span>
+                    </button>
+                </div>
+                <div id="tabsContainer" class="tabs-container"></div>
+                <div class="tab-bar-actions">
+                    <button id="btnAddTab" class="btn btn-outline-primary btn-sm tab-add-btn" title="Thêm tab truy vấn mới">+</button>
+                </div>
+            </div>
+
+            <div id="editor-wrapper">
+                <div id="editorContainer" style="width: 100%; height: 100%"></div>
+            </div>
+
+            <div class="resizer" id="dragMe" title="Kéo để thay đổi chiều cao"></div>
+
+            <div class="toolbar p-2 d-flex align-items-center gap-2 border-bottom flex-wrap">
+                <button id="btnExecute" class="btn btn-primary btn-sm">Thực hiện</button>
+                <button id="btnFormat" class="btn btn-outline-primary btn-sm">Format SQL</button>
+                <button id="btnExport" class="btn btn-success btn-sm">Xuất Excel</button>
+                <button id="btnSearchProcFunc" class="btn btn-amber btn-sm">Tìm Proc/Func</button>
+                <button id="btnSearchTextModal" class="btn btn-outline-info btn-sm fw-semibold" title="Tìm kiếm văn bản trong các tab/phiên (Ctrl+Shift+F)">🔍 Tìm Text</button>
+                <button id="btnJasperViewer" class="btn btn-warning btn-sm fw-bold">Xem Jasper</button>
+
+                <div class="ms-auto d-flex align-items-center gap-3 execution-info-controls">
+                    <div class="d-flex align-items-center gap-2 pagination-controls">
+                        <div class="form-check form-check-inline m-0 d-flex align-items-center" title="Tự động đếm tổng số bản ghi (chạy ngầm, không làm chậm hiển thị dữ liệu)">
+                            <input class="form-check-input" type="checkbox" id="chkAutoCount" checked style="cursor: pointer; margin-right: 4px;">
+                            <label class="form-check-label small text-muted" for="chkAutoCount" style="cursor: pointer; user-select: none; font-size: 11px; white-space: nowrap;">Đếm tổng</label>
+                        </div>
+                        <select id="pageSize" class="form-select form-select-sm" style="width: 85px">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                        <button id="btnFirst" class="btn btn-outline-secondary btn-sm">« Đầu</button>
+                        <button id="btnPrev" class="btn btn-outline-secondary btn-sm">‹ Trước</button>
+                        <span id="pageInfo" class="mx-2 text-muted small fw-bold" style="white-space: nowrap"
+                            >Trang 1 / 1</span
+                        >
+                        <button id="btnNext" class="btn btn-outline-secondary btn-sm">Sau ›</button>
+                        <button id="btnLast" class="btn btn-outline-secondary btn-sm">Cuối »</button>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-container" id="gridWrapper">
+                <table class="table table-bordered table-striped table-hover" id="resultTable">
+                    <thead class="table-dark" id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="bottom-status-bar d-flex align-items-center justify-content-between">
+                <div id="status" class="text-secondary small fw-bold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 220px);"></div>
+                <div id="executionTime" class="text-secondary small fw-bold ms-auto" style="white-space: nowrap; flex-shrink: 0; padding-left: 12px;"></div>
+            </div>
+            <div id="loadingOverlay" class="d-none" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); z-index: 10000; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                <div class="p-4 rounded-4 shadow-lg text-center" style="background: var(--bg-card); border: 1px solid var(--border-color); min-width: 280px;">
+                    <div class="spinner-border text-primary mb-3" style="width: 2.5rem; height: 2.5rem;" role="status"></div>
+                    <div id="loadingMessage" class="fw-semibold" style="color: var(--text-color); font-size: 15px;">Đang xử lý, vui lòng đợi...</div>
+                </div>
+            </div>
+        </div>
+        <script src="bootstrap.bundle.min.js"></script>
+        <script src="vs/loader.js"></script>
+        <script src="xlsx.full.min.js"></script>
+        <script src="ui.js" charset="UTF-8"></script>
+
+        <div class="modal fade" id="aiReportModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold">Kết quả phân tích SQL từ Gemini AI</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="aiReportContent" style="font-size: 13px; line-height: 1.6;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="procFuncModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0">Tìm Proc / Func</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="font-size: 13px;">
+                        <div class="input-group mb-3">
+                            <input type="text" id="procFuncSearchInput" class="form-control" placeholder="Nhập từ khóa tìm kiếm...">
+                            <button class="btn btn-primary fw-bold" type="button" id="btnProcFuncSearch">Tìm kiếm</button>
+                        </div>
+
+                        <div id="procFuncStatus" class="text-muted mb-2 small fw-bold"></div>
+
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-bordered table-striped table-hover align-middle">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th style="width: 60px; text-align: center;">STT</th>
+                                        <th>Owner</th>
+                                        <th>Tên đối tượng</th>
+                                        <th style="width: 140px;">Loại</th>
+                                        <th style="width: 200px; text-align: center;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="procFuncTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Nhập từ khóa và nhấn "Tìm kiếm"</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="runProcFuncModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0" id="runProcFuncTitle">Truyền tham số Proc/Func</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="font-size: 13px;">
+                        <div class="mb-3 position-relative" id="unitSearchContainer">
+                            <label class="form-label fw-bold">Chọn Đơn vị (điền nhanh I_HID, I_SCH):</label>
+                            <input type="text" id="unitSearchInput" class="form-control form-control-sm" placeholder="Nhập tên, CSYTID hoặc Schema để tìm kiếm..." autocomplete="off">
+                            <div id="unitDropdownMenu" class="dropdown-menu w-100 shadow-sm" style="max-height: 200px; overflow-y: auto; display: none; z-index: 1050;"></div>
+                            <div id="unitRecentSearchSection" class="mt-2 p-2 border rounded bg-light-subtle">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="small text-muted fw-bold" id="unitRecentSearchTitle">🕒 Đơn vị của lần tìm kiếm gần nhất:</span>
+                                    <button type="button" id="btnClearRecentUnits" class="btn btn-link p-0 text-muted text-decoration-none" style="font-size: 11px;" title="Xóa lịch sử tìm kiếm">Xóa lịch sử</button>
+                                </div>
+                                <div id="unitRecentBadgesContainer" class="d-flex flex-wrap gap-1" style="max-height: 90px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                        <div id="runProcFuncPackageSelectContainer" class="mb-3" style="display: none;">
+                            <label class="form-label fw-bold">Chọn Sub-program trong Package:</label>
+                            <select id="runProcFuncSubProgramSelect" class="form-select form-select-sm"></select>
+                        </div>
+                        <div id="runProcFuncParamsContainer"></div>
+                    </div>
+                    <div class="modal-footer py-1 px-3">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary btn-sm fw-bold" id="btnSubmitRunProcFunc">Thực thi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="jasperModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 95%;">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0">Xem Báo Cáo Jasper (.jrxml)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 13px;">
+                        <div class="row g-3">
+                            <div class="col-md-4 border-end">
+                                <ul class="nav nav-tabs nav-fill mb-3" id="jasperTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active py-1 px-2 fw-bold small" id="tab-jasper-config-btn" data-bs-toggle="tab" data-bs-target="#tab-jasper-config" type="button" role="tab">
+                                            ⚙️ Cấu hình & Render
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link py-1 px-2 fw-bold small text-primary" id="tab-jasper-sessions-btn" data-bs-toggle="tab" data-bs-target="#tab-jasper-sessions" type="button" role="tab">
+                                            📁 Phiên đã lưu <span id="jasperSessionCountBadge" class="badge bg-secondary ms-1">0</span>
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content" id="jasperTabContent">
+                                    <!-- TAB 1: Cấu hình hiện tại -->
+                                    <div class="tab-pane fade show active" id="tab-jasper-config" role="tabpanel">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label class="form-label fw-bold mb-0">1. Chọn file thiết kế .jrxml</label>
+                                                <span id="jasperCurrentFileBadge" class="badge bg-light text-dark font-monospace d-none" style="font-size: 11px;"></span>
+                                            </div>
+                                            <input type="file" id="jasperFileInput" class="form-control form-control-sm" accept=".jrxml">
+                                        </div>
+                                        <div id="jasperParamsSection" class="d-none">
+                                            <label class="form-label fw-bold text-primary">2. Nhập tham số báo cáo</label>
+                                            <div id="jasperParamsContainer" class="p-2 border rounded bg-light mb-3" style="max-height: 220px; overflow-y: auto;">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">3. Lệnh SQL hoặc Tên Procedure lấy dữ liệu</label>
+                                            <textarea id="jasperSqlInput" class="form-control form-control-sm font-monospace" rows="4" placeholder="Nhập câu lệnh SELECT... hoặc tên Procedure cần truyền tham số..."></textarea>
+                                        </div>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="chkUseCurrentGridData">
+                                            <label class="form-check-label fw-bold text-success" for="chkUseCurrentGridData">
+                                                Sử dụng dữ liệu từ Grid (Tab hiện tại)
+                                            </label>
+                                        </div>
+                                        <div class="d-grid gap-2 mb-2">
+                                            <button id="btnJasperRender" class="btn btn-warning btn-sm fw-bold">🚀 Render Báo Cáo PDF</button>
+                                        </div>
+                                        <div class="d-flex gap-2 mb-2">
+                                            <button id="btnJasperSaveSession" class="btn btn-outline-primary btn-sm fw-bold flex-grow-1 d-none">
+                                                💾 Lưu phiên preview này
+                                            </button>
+                                            <button id="btnJasperDownload" class="btn btn-success btn-sm fw-bold flex-grow-1 d-none">
+                                                ⬇️ Tải PDF Về Máy
+                                            </button>
+                                        </div>
+                                        <div id="jasperStatus" class="mt-2 text-muted small fw-bold"></div>
+                                    </div>
+
+                                    <!-- TAB 2: Danh sách phiên preview đã lưu -->
+                                    <div class="tab-pane fade" id="tab-jasper-sessions" role="tabpanel">
+                                        <div class="mb-2">
+                                            <input type="text" id="jasperSessionSearch" class="form-control form-control-sm" placeholder="🔍 Tìm theo file JRXML, tên Proc, SQL...">
+                                        </div>
+                                        <div class="row g-1 mb-2">
+                                            <div class="col-8">
+                                                <select id="jasperSessionDateSelect" class="form-select form-select-sm">
+                                                    <option value="">📅 Tất cả các ngày</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-4 d-flex">
+                                                <button id="btnRefreshJasperSessions" class="btn btn-outline-secondary btn-sm w-100 fw-bold" title="Làm mới danh sách">
+                                                    🔄 Tải lại
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="jasperSessionList" class="overflow-auto border rounded p-1 bg-light-subtle" style="max-height: 480px; min-height: 250px;">
+                                            <div class="text-center text-muted py-4 small">Đang tải danh sách phiên preview...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="d-flex flex-column h-100" style="min-height: 500px;">
+                                    <div class="fw-bold mb-2">Xem trước báo cáo PDF</div>
+                                    <div class="flex-grow-1 border rounded bg-secondary position-relative d-flex align-items-center justify-content-center" style="min-height: 480px;">
+                                        <iframe id="jasperIframe" class="w-100 h-100 d-none" style="border: none;"></iframe>
+                                        <div id="jasperPlaceholderText" class="text-white text-center">
+                                            <div class="fs-4">⚠️ Trống</div>
+                                            <div class="small text-light">Vui lòng nạp JRXML, nhập dữ liệu và bấm Render</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sidebarCollapsedSearchPanel" class="position-absolute shadow border rounded p-2" style="display: none; width: 280px; background-color: var(--bg-card); border-color: var(--border-color); z-index: 1060;">
+            <input type="text" id="sidebarCollapsedUnitSearchInput" class="form-control form-control-sm mb-2" placeholder="Tìm kiếm đơn vị..." autocomplete="off">
+            <div id="sidebarCollapsedRecentSection" class="mb-2 p-1 border rounded bg-light-subtle">
+                <div class="small text-muted fw-bold mb-1" id="sidebarCollapsedRecentTitle" style="font-size: 11px;">🕒 Đơn vị gần nhất:</div>
+                <div id="sidebarCollapsedRecentBadges" class="d-flex flex-wrap gap-1" style="max-height: 80px; overflow-y: auto;"></div>
+            </div>
+            <div id="sidebarCollapsedUnitDropdownMenu" class="dropdown-menu w-100 shadow-sm position-relative" style="max-height: 180px; overflow-y: auto; display: none;"></div>
+        </div>
+
+
+
+        <div class="modal fade" id="logViewerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 90%;">
+                <div class="modal-content">
+                    <div class="modal-header bg-dark text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0">Nhật Ký Hoạt Động</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 13px;">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold mb-1">Chọn ngày xem log:</label>
+                                <div class="input-group input-group-sm">
+                                    <select id="logDateSelect" class="form-select form-select-sm"></select>
+                                    <button id="btnRefreshLogs" class="btn btn-outline-secondary" type="button" title="Làm mới danh sách nhật ký">🔄</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold mb-1">Lọc kiểu thao tác:</label>
+                                <select id="logTypeFilter" class="form-select form-select-sm">
+                                    <option value="ALL">Tất cả hành động</option>
+                                    <option value="QUERY">Truy vấn SELECT (QUERY)</option>
+                                    <option value="NON-QUERY">Thay đổi dữ liệu (NON-QUERY)</option>
+                                    <option value="SEARCH_PROC">Tìm Proc/Func (SEARCH)</option>
+                                    <option value="RUN_PROC">Chạy Proc/Func (RUN)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 d-flex justify-content-between">
+                                    <span>Tìm kiếm từ khóa văn bản:</span>
+                                    <span id="logCountBadge" class="text-muted fw-normal" style="font-size: 11px;"></span>
+                                </label>
+                                <input type="text" id="logTextSearch" class="form-control form-control-sm" placeholder="Nhập từ khóa tìm kiếm trong log...">
+                            </div>
+                        </div>
+                        <div class="border rounded p-2 bg-light text-dark" style="max-height: 500px; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-hover align-middle mb-0" style="font-size: 12px; font-family: monospace;">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th style="width: 90px; text-align: center;">Thời gian</th>
+                                            <th style="width: 120px; text-align: center;">Loại</th>
+                                            <th style="width: 100px; text-align: center;">Site</th>
+                                            <th>Nội dung chi tiết</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logViewerTableBody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">Vui lòng chọn ngày để tải nhật ký</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Quản Lý Bảng Đã Lưu -->
+        <div class="modal fade" id="savedTablesModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 92%;">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0">📋 Quản Lý Bảng Kết Quả Đã Lưu</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 13px;">
+                        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="text" id="searchSavedTableInput" class="form-control form-control-sm" placeholder="Tìm kiếm bảng đã lưu..." style="width: 250px;">
+                                <span class="text-muted small fw-semibold" id="savedTablesSummary">0 bảng được lưu</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button id="btnSaveCurrentToNewTableModal" class="btn btn-outline-primary btn-sm fw-semibold">💾 Lưu kết quả hiện tại thành bảng mới</button>
+                                <button id="btnCreateBlankTableModal" class="btn btn-success btn-sm fw-bold">+ Tạo Bảng Trống</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive border rounded" style="max-height: 480px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center">STT</th>
+                                        <th style="min-width: 180px;">Tên Bảng</th>
+                                        <th style="width: 100px;">Site</th>
+                                        <th style="width: 90px;" class="text-center">Số dòng</th>
+                                        <th style="width: 160px;">Thời gian tạo</th>
+                                        <th>Ghi chú / SQL</th>
+                                        <th style="width: 240px;" class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="savedTablesListBody">
+                                    <tr><td colspan="7" class="text-center text-muted py-4">Chưa có bảng nào được lưu</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Quản Lý Phiên Làm Việc (Session Manager) -->
+        <div class="modal fade" id="sessionManagerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0">🗂️ Quản Lý Phiên Làm Việc (Tab Sessions)</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 13px;">
+                        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                            <span class="text-muted small" id="sessionListSummary">Danh sách các phiên làm việc</span>
+                            <button id="btnAddNewSessionModal" class="btn btn-primary btn-sm fw-bold">➕ Thêm Phiên Mới</button>
+                        </div>
+                        <div class="table-responsive border rounded" style="max-height: 450px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center">STT</th>
+                                        <th style="min-width: 160px;">Tên Phiên</th>
+                                        <th style="width: 80px;" class="text-center">Số Tab</th>
+                                        <th style="width: 150px;">Thời gian lưu</th>
+                                        <th>Danh sách Tab</th>
+                                        <th style="width: 230px;" class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sessionListBody">
+                                    <tr><td colspan="6" class="text-center text-muted py-4">Chưa có phiên nào được lưu</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Thêm / Chỉnh Sửa Dòng Dữ Liệu Bảng -->
+        <div class="modal fade" id="editTableRowModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0" id="editTableRowModalTitle">Chỉnh Sửa Dòng Dữ Liệu</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 13px;">
+                        <form id="editTableRowForm" class="row g-2"></form>
+                    </div>
+                    <div class="modal-footer py-2 px-3">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" id="btnSaveTableRowData" class="btn btn-primary btn-sm fw-bold">Lưu Dữ Liệu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Modal Tìm Kiếm Text trong Phiên & Tab (Search Text Modal) -->
+        <div class="modal fade" id="searchTextModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 92%;">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white py-2 px-3">
+                        <h5 class="modal-title fw-bold fs-6 m-0">🔍 Tìm Kiếm Văn Bản Trong Phiên & Tab</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 13px;">
+                        <div class="row g-2 align-items-center mb-3">
+                            <div class="col-md-6 col-12">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">🔎</span>
+                                    <input type="text" id="globalSearchInput" class="form-control" placeholder="Nhập từ khóa cần tìm trong câu SQL..." autocomplete="off">
+                                    <button id="btnExecuteSearchText" class="btn btn-primary fw-semibold px-3">Tìm Kiếm</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12 d-flex align-items-center gap-3 flex-wrap">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-semibold text-muted small">Phạm vi:</span>
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio" name="searchScopeOption" id="searchScopeCurrent" value="current" checked style="cursor: pointer;">
+                                        <label class="form-check-label small fw-semibold" for="searchScopeCurrent" id="lblSearchScopeCurrent" style="cursor: pointer;">Phiên hiện tại</label>
+                                    </div>
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio" name="searchScopeOption" id="searchScopeAll" value="all" style="cursor: pointer;">
+                                        <label class="form-check-label small fw-semibold" for="searchScopeAll" style="cursor: pointer;">Tất cả các phiên</label>
+                                    </div>
+                                </div>
+                                <div class="form-check form-check-inline m-0 ms-md-auto">
+                                    <input class="form-check-input" type="checkbox" id="searchMatchCase" style="cursor: pointer;">
+                                    <label class="form-check-label small" for="searchMatchCase" style="cursor: pointer;">Phân biệt HOA/thường</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span id="searchResultSummary" class="text-muted small">Nhập từ khóa và bấm Tìm Kiếm để xem các dòng kết quả tìm thấy.</span>
+                            <span class="badge bg-secondary font-monospace" id="searchResultCountBadge" style="display: none;">0 kết quả</span>
+                        </div>
+
+                        <div class="table-responsive border rounded" style="max-height: 480px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="searchResultTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 45px;" class="text-center">#</th>
+                                        <th style="width: 140px;">Phiên</th>
+                                        <th style="width: 130px;">Tab</th>
+                                        <th style="width: 70px;" class="text-center">Dòng</th>
+                                        <th>Nội dung dòng tìm thấy</th>
+                                        <th style="width: 80px;" class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="searchResultBody">
+                                    <tr><td colspan="6" class="text-center text-muted py-4">Chưa thực hiện tìm kiếm</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-3">
+                        <span class="text-muted small me-auto">💡 Nhấp vào bất kỳ dòng nào trong bảng để nhảy trực tiếp đến dòng đó trong trình soạn thảo.</span>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

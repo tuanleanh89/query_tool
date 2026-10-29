@@ -1,0 +1,14 @@
+# Logs & Databases
+log/
+*.log
+*.db
+*.sqlite
+
+# Maven & Java
+target/
+*.class
+
+# Visual Studio / C#
+.vs/
+[Bb]in/
+[Oo]bj/

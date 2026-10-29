@@ -1,0 +1,9 @@
+{
+  "name": "com.his.jasper_helper",
+  "description": "Jasper Helper Native Host",
+  "path": "D:\\Project_new\\query_tool\\jasper_helper\\jasper_host.exe",
+  "type": "stdio",
+  "allowed_extensions": [
+    "vnpthis-sql-query-tool@project.com"
+  ]
+}

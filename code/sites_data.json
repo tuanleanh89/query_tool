@@ -1,0 +1,311 @@
+{
+  "bvhungyen": [
+    {
+      "Khách hàng": "Bệnh viện Y Dược cổ truyền",
+      "CSYTID": "72760",
+      "Schema": "HIS_DATA_HYN_YDCT"
+    },
+    {
+      "Khách hàng": "Bệnh viện Mắt Hưng Yên",
+      "CSYTID": "87178",
+      "Schema": "HIS_DATA_HYN_MAT"
+    },
+    {
+      "Khách hàng": "Bệnh viện Sức khỏe tâm thần Hưng Yên",
+      "CSYTID": "79639",
+      "Schema": "HIS_DATA_HYN_TAMTHAN"
+    },
+    {
+      "Khách hàng": "Bệnh viện Bệnh nhiệt đới tỉnh Hưng Yên",
+      "CSYTID": "84911",
+      "Schema": "HIS_DATA_HYN_BND"
+    },
+    {
+      "Khách hàng": "Trung tâm Bảo vệ, Chăm sóc sức khỏe cán bộ tỉnh - Phòng khám Đa khoa",
+      "CSYTID": "88123",
+      "Schema": "HIS_DATA_HYN_BVCSSK"
+    },
+    {
+      "Khách hàng": "Bệnh viện Phổi",
+      "CSYTID": "84900",
+      "Schema": "HIS_DATA_HYN_PHOI"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Phố Nối",
+      "CSYTID": "57520",
+      "Schema": "HIS_DATA_HYN_PHONOI"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế huyện Khoái Châu",
+      "CSYTID": "90861",
+      "Schema": "HIS_DATA_HYN_KHOAICHAU"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế huyện Tiên Lữ",
+      "CSYTID": "79500",
+      "Schema": "HIS_DATA_HYN_TIENLU"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế huyện Kim Động",
+      "CSYTID": "90862",
+      "Schema": "HIS_DATA_HYN_KIMDONG"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế huyện Ân Thi",
+      "CSYTID": "90421",
+      "Schema": "HIS_DATA_HYN_ANTHI"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế Thị xã Mỹ Hào",
+      "CSYTID": "87187",
+      "Schema": "HIS_DATA_HYN_MYHAO"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế huyện Yên Mỹ",
+      "CSYTID": "92862",
+      "Schema": "HIS_DATA_HYN_YENMY"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế Văn Lâm",
+      "CSYTID": "90863",
+      "Schema": "HIS_DATA_HYN_VANLAM"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế Phố Hiến",
+      "CSYTID": "88120",
+      "Schema": "HIS_DATA_HYN_TTYTTP"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế Văn Giang",
+      "CSYTID": "89580",
+      "Schema": "HIS_DATA_HYN_VANGIANG"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Phúc Lâm",
+      "CSYTID": "55900",
+      "Schema": "HIS_DATA_HYN_DKPL"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Minh Tâm - Công ty TNHH dịch vụ y tế Quyết Tâm",
+      "CSYTID": "117161",
+      "Schema": "HIS_DATA_HYN_MINHTAM"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Thiên Đức",
+      "CSYTID": "92002",
+      "Schema": "HIS_DATA_HYN_PKDKTD"
+    },
+    {
+      "Khách hàng": "Bệnh viện chuyên khoa mắt Alina",
+      "CSYTID": "98702",
+      "Schema": "HIS_DATA_HYN_ALINA"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Tâm Đức",
+      "CSYTID": "101201",
+      "Schema": "HIS_DATA_HYN_TAMDUC"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Việt Nhật - công ty TNHH Việt Nhật Như Quỳnh",
+      "CSYTID": "117101",
+      "Schema": "HIS_DATA_HYN_VIETNHAT"
+    },
+    {
+      "Khách hàng": "phòng khám đa khoa Việt Nhật cơ sở 2- Công ty TNHH Việt Nhật Như Quỳnh",
+      "CSYTID": "117141",
+      "Schema": "HIS_DATA_HYN_VIETNHAT2"
+    },
+    {
+      "Khách hàng": "Bệnh viện Mắt Việt - Hà Nội",
+      "CSYTID": "76222",
+      "Schema": "HIS_DATA_HYN_MATVIET"
+    },
+    {
+      "Khách hàng": "Trạm y tế - Tổng công ty may Hưng Yên",
+      "CSYTID": "92861",
+      "Schema": "HIS_DATA_HYN_CTYMAY"
+    },
+    {
+      "Khách hàng": "Trạm y tế công ty Cổ phần Tiên Hưng",
+      "CSYTID": "91781",
+      "Schema": "HIS_DATA_HYN_CTYTHG"
+    },
+    {
+      "Khách hàng": "Bệnh xá Công an tỉnh Hưng Yên",
+      "CSYTID": "98706",
+      "Schema": "HIS_DATA_HYN_BXCA"
+    },
+    {
+      "Khách hàng": "Trạm y tế Công ty cổ phần May và Dịch vụ Hưng Long",
+      "CSYTID": "93881",
+      "Schema": "HIS_DATA_HYN_CTYHLG"
+    },
+    {
+      "Khách hàng": "Trung tâm y tế Đường bộ 2",
+      "CSYTID": "98704",
+      "Schema": "HIS_DATA_HYN_TTYTDB"
+    },
+    {
+      "Khách hàng": "Phòng khám Medicare Hà Nội",
+      "CSYTID": "101204",
+      "Schema": "HIS_DATA_HYN_MEDICARE"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Phúc Nhật Vượng",
+      "CSYTID": "111383",
+      "Schema": "HIS_DATA_HYN_PHUCNHATVUONG"
+    },
+    {
+      "Khách hàng": "Bệnh viện Mắt Hải Hưng",
+      "CSYTID": "115001",
+      "Schema": "HIS_DATA_HYN_MATHAIHUNG"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Việt Pháp II",
+      "CSYTID": "117221",
+      "Schema": "HIS_DATA_HYN_VIETPHAPII"
+    }
+  ],
+  "bvthaibinh": [
+    {
+      "Khách hàng": "Bệnh viện Đại học Y Thái Bình",
+      "CSYTID": "960",
+      "Schema": "HIS_DATA_DHYTB"
+    },
+    {
+      "Khách hàng": "Bệnh viện Da liễu cơ sở 1",
+      "CSYTID": "36280",
+      "Schema": "HIS_DATA_TBH1"
+    },
+    {
+      "Khách hàng": "Bệnh viện Da liễu cơ sở 2",
+      "CSYTID": "38280",
+      "Schema": "HIS_DATA_TBH1"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Vũ Thư",
+      "CSYTID": "1086",
+      "Schema": "HIS_DATA_TBH_VTU"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Thái Ninh",
+      "CSYTID": "40782",
+      "Schema": "HIS_DATA_TBH_TNH"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Quỳnh Phụ",
+      "CSYTID": "24560",
+      "Schema": "HIS_DATA_TBH_QPU"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Hưng Hà",
+      "CSYTID": "30252",
+      "Schema": "HIS_DATA_TBH_HHA"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Trường Cao đẳng y tế Thái Bình",
+      "CSYTID": "41560",
+      "Schema": "HIS_DATA_TBH_CDYT"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Hưng Nhân",
+      "CSYTID": "32660",
+      "Schema": "HIS_DATA_TBH1"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Phụ Dực",
+      "CSYTID": "29560",
+      "Schema": "HIS_DATA_TBH_PDU"
+    },
+    {
+      "Khách hàng": "Bệnh viện đa khoa Nam Tiền Hải",
+      "CSYTID": "1149",
+      "Schema": "HIS_DATA_TBH_THI"
+    },
+    {
+      "Khách hàng": "BỆNH VIỆN MẮT HÀ NỘI – THÁI BÌNH",
+      "CSYTID": "64880",
+      "Schema": "HIS_DATA_TBH_MATHNTBH"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Anh Dũng",
+      "CSYTID": "32000",
+      "Schema": "HIS_DATA_TBH1"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Tâm Đức",
+      "CSYTID": "48160",
+      "Schema": "HIS_DATA_TBH_PKTD"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Quang Trung",
+      "CSYTID": "49020",
+      "Schema": "HIS_DATA_TBH_DKQT"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Anh Vinh",
+      "CSYTID": "51655",
+      "Schema": "HIS_DATA_TBH_PKAV"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Phúc An",
+      "CSYTID": "53150",
+      "Schema": "HIS_DATA_TBH_YTEPAN"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Liên Am",
+      "CSYTID": "54190",
+      "Schema": "HIS_DATA_TBH_LIEMAN"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Đại Dương Kiến Xương",
+      "CSYTID": "53456",
+      "Schema": "HIS_DATA_TBH_PKDDKXG"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Đại Dương Đông Hưng",
+      "CSYTID": "56420",
+      "Schema": "HIS_DATA_TBH_DAIDUONG"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Bình An",
+      "CSYTID": "54320",
+      "Schema": "HIS_DATA_TBH_PKBINHAN"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Sao Mai",
+      "CSYTID": "55001",
+      "Schema": "HIS_DATA_TBH_SMI"
+    },
+    {
+      "Khách hàng": "Phòng khám ĐK Nam Cường",
+      "CSYTID": "56080",
+      "Schema": "HIS_DATA_TBH_NAMCUONG"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Quỳnh Côi",
+      "CSYTID": "56081",
+      "Schema": "HIS_DATA_TBH_QUYNHCOI"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Quỳnh Phụ",
+      "CSYTID": "56081",
+      "Schema": "HIS_DATA_TBH_QUYNHCOI"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Bình Thanh",
+      "CSYTID": "57440",
+      "Schema": "HIS_DATA_TBH_BINHTHANH"
+    },
+    {
+      "Khách hàng": "Phòng khám đa khoa Bình Dân Vĩnh Bảo",
+      "CSYTID": "56262",
+      "Schema": "HIS_DATA_HPG_VINHBAO"
+    },
+    {
+      "Khách hàng": "Phòng khám Đa khoa Đại Dương Tiền Hải",
+      "CSYTID": "53299",
+      "Schema": "HIS_DATA_TBH_PKDDTH"
+    }
+  ]
+}
