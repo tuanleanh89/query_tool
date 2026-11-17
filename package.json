@@ -1,0 +1,6 @@
+{
+  "name": "his-sql-query-tool-tests",
+  "private": true,
+  "version": "1.2.0",
+  "scripts": { "test": "node --test tests/*.test.js" }
+}

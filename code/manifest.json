@@ -1,17 +1,14 @@
 {
   "manifest_version": 3,
   "name": "VNPT HIS SQL Query Tool",
-  "version": "1.1.2",
+  "version": "1.2.1",
   "permissions": [
     "storage",
     "unlimitedStorage",
     "tabs",
-    "scripting",
-    "activeTab",
     "nativeMessaging"
   ],
   "host_permissions": [
-    "<all_urls>",
     "https://bvhungyen.vncare.vn/*",
     "https://bvthaibinh.vncare.vn/*",
     "https://bvdakhoa.vncare.vn/*",
@@ -29,7 +26,9 @@
         "https://bvthaibinh.vncare.vn/*",
         "https://bvdakhoa.vncare.vn/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_end",
       "all_frames": true
     }

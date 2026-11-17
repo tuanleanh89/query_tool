@@ -4,6 +4,8 @@ echo [INFO] Starting Jasper Helper Server...
 cd /d "%~dp0"
 
 set "JAR_PATH=%~dp0jasper-helper.jar"
+rem v1.2.0: uu tien ban jar moi (ban cu jasper-helper.jar duoc giu lai de du phong)
+if exist "%~dp0jasper-helper-1.2.0.jar" set "JAR_PATH=%~dp0jasper-helper-1.2.0.jar"
 
 rem 1. Neu co file standalone JAR (Fat JAR), tim Java/JRE de chay truc tiep
 if exist "%JAR_PATH%" (

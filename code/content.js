@@ -121,39 +121,6 @@
         } catch (e) {
             console.error("[VNPT_HIS_AUTO] Failed to restore backup:", e);
         }
-        try {
-            const jwtRegex = /eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g;
-            let token = null;
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key === 'his_sql_tool_backup') continue;
-                const val = localStorage.getItem(key);
-                if (val) {
-                    const match = val.match(jwtRegex);
-                    if (match) {
-                        token = match[0];
-                        break;
-                    }
-                }
-            }
-            if (!token) {
-                for (let i = 0; i < sessionStorage.length; i++) {
-                    const key = sessionStorage.key(i);
-                    if (key === 'his_sql_tool_backup') continue;
-                    const val = sessionStorage.getItem(key);
-                    if (val) {
-                        const match = val.match(jwtRegex);
-                        if (match) {
-                            token = match[0];
-                            break;
-                        }
-                    }
-                }
-            }
-            // Da loai bo dong bo session trinh duyet, background tu dong xac thuc doc lap
-        } catch (e) {
-            console.error("[VNPT_HIS_AUTO] Failed:", e);
-        }
     }
 
     function init() {

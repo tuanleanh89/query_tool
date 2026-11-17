@@ -184,6 +184,17 @@
                 margin-bottom: 4px;
             }
 
+            /* Layout nằm giữa khối đơn vị và khối dưới cùng; khối dưới bám đáy sidebar */
+            .layout-controls-wrapper {
+                margin-top: auto;
+                margin-bottom: auto;
+            }
+
+            .bottom-controls-wrapper {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
             .sidebar-unit-expanded {
                 padding: 0 8px;
             }
@@ -992,6 +1003,9 @@
                 border-color: var(--border-color) !important;
             }
 
+            /* Hộp thoại luôn nằm trên lớp phủ loading (z-index 10000) */
+            .swal2-container { z-index: 20000 !important; }
+
             body.dark-mode .swal2-popup {
                 background-color: var(--bg-card) !important;
                 color: var(--text-color) !important;
@@ -1250,7 +1264,17 @@
         <script src="bootstrap.bundle.min.js"></script>
         <script src="vs/loader.js"></script>
         <script src="xlsx.full.min.js"></script>
+        <script src="sql_utils.js"></script>
+        <script src="ui_state.js" charset="UTF-8"></script>
+        <script src="ui_core.js" charset="UTF-8"></script>
         <script src="ui.js" charset="UTF-8"></script>
+        <script src="ui_tabs.js" charset="UTF-8"></script>
+        <script src="ui_query.js" charset="UTF-8"></script>
+        <script src="ui_units.js" charset="UTF-8"></script>
+        <script src="ui_system.js" charset="UTF-8"></script>
+        <script src="ui_tables.js" charset="UTF-8"></script>
+        <script src="ui_sessions.js" charset="UTF-8"></script>
+        <script src="ui_search.js" charset="UTF-8"></script>
 
         <div class="modal fade" id="aiReportModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">

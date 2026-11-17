@@ -4,7 +4,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
 echo "Đang nén extension thành file query_tool.xpi..."
-zip -r -FS query_tool.xpi manifest.json background.js content.js ui.html ui.js sites_data.json sql-formatter.min.js sweetalert2.all.min.js bootstrap.bundle.min.js xlsx.full.min.js icon_red.png vs/ -x "*.rar"
+zip -r -FS query_tool.xpi manifest.json background.js sql_utils.js content.js ui.html ui_state.js ui_core.js ui.js ui_tabs.js ui_query.js ui_units.js ui_system.js ui_tables.js ui_sessions.js ui_search.js sites_data.json sql-formatter.min.js sweetalert2.all.min.js bootstrap.bundle.min.js xlsx.full.min.js icon_red.png vs/ -x "*.rar"
 
 for p in ~/.mozilla/firefox-esr/*/ ~/.mozilla/firefox/*/; do
   if [ -d "$p" ]; then

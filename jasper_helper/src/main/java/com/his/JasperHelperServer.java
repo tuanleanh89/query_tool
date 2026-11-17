@@ -63,16 +63,7 @@ public class JasperHelperServer {
     static class LogHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "GET, OPTIONS")) return;
 
             try {
                 String logs;
@@ -94,6 +85,126 @@ public class JasperHelperServer {
     }
 
     private static java.sql.Connection dbConn = null;
+
+    // ------------------------------------------------------------------------------------------------
+    // Bảo mật cổng cục bộ (v1.2.0)
+    //  - Chỉ lắng nghe trên loopback (127.0.0.1), không mở ra mạng LAN.
+    //  - Chỉ chấp nhận yêu cầu đến từ extension (Origin chrome-extension:// / moz-extension://) hoặc client cục bộ
+    //    không phải trình duyệt (không có Origin / Sec-Fetch-Site). Trang web bất kỳ bị từ chối (CSRF/CORS).
+    //  - Kiểm tra Host để chống DNS rebinding.
+    //  - Có thể ghim chính xác ID extension qua biến môi trường QT_ALLOWED_ORIGINS (phân tách bằng dấu phẩy).
+    // ------------------------------------------------------------------------------------------------
+    static final class Security {
+        private static final java.util.Set<String> PINNED_ORIGINS = new java.util.HashSet<>();
+        static {
+            String env = System.getenv("QT_ALLOWED_ORIGINS");
+            if (env != null) {
+                for (String o : env.split(",")) {
+                    String t = o.trim();
+                    if (!t.isEmpty()) PINNED_ORIGINS.add(t);
+                }
+            }
+        }
+
+        static boolean isLoopbackHost(String hostHeader) {
+            if (hostHeader == null) return false;
+            String h = hostHeader.trim().toLowerCase();
+            if (h.startsWith("[")) {
+                int end = h.indexOf(']');
+                h = end > 0 ? h.substring(0, end + 1) : h;
+            } else {
+                int colon = h.lastIndexOf(':');
+                if (colon > 0) h = h.substring(0, colon);
+            }
+            return h.equals("localhost") || h.equals("127.0.0.1") || h.equals("[::1]");
+        }
+
+        static boolean isAllowedOrigin(String origin) {
+            if (origin == null) return false;
+            if (!PINNED_ORIGINS.isEmpty()) return PINNED_ORIGINS.contains(origin);
+            return origin.startsWith("chrome-extension://") || origin.startsWith("moz-extension://");
+        }
+
+        private static void deny(HttpExchange ex, int code) throws IOException {
+            ex.sendResponseHeaders(code, -1);
+            ex.close();
+        }
+
+        /** @return true nếu tiếp tục xử lý; false nếu đã trả lời xong (từ chối hoặc OPTIONS). */
+        static boolean preflight(HttpExchange ex, String methods) throws IOException {
+            com.sun.net.httpserver.Headers req = ex.getRequestHeaders();
+            if (!isLoopbackHost(req.getFirst("Host"))) { deny(ex, 403); return false; }
+
+            String origin = req.getFirst("Origin");
+            boolean extensionOrigin = isAllowedOrigin(origin);
+            if (origin != null && !extensionOrigin) { deny(ex, 403); return false; }
+
+            if (origin == null) {
+                String site = req.getFirst("Sec-Fetch-Site");
+                if (site != null && !site.equalsIgnoreCase("none") && !site.equalsIgnoreCase("same-origin")) {
+                    deny(ex, 403);   // yêu cầu no-cors từ trang web khác
+                    return false;
+                }
+            }
+
+            if (extensionOrigin) {
+                com.sun.net.httpserver.Headers h = ex.getResponseHeaders();
+                h.set("Access-Control-Allow-Origin", origin);
+                h.set("Vary", "Origin");
+                h.set("Access-Control-Allow-Methods", methods);
+                h.set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
+                h.set("Access-Control-Allow-Private-Network", "true");
+                h.set("Access-Control-Max-Age", "600");
+            }
+
+            if (ex.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+                ex.sendResponseHeaders(extensionOrigin ? 204 : 403, -1);
+                ex.close();
+                return false;
+            }
+            return true;
+        }
+    }
+
+    private static final java.util.regex.Pattern SAFE_ID = java.util.regex.Pattern.compile("^[A-Za-z0-9_-]{1,120}$");
+
+    /** Mã phiên chỉ gồm chữ, số, '_' và '-' để không thể thoát khỏi thư mục report_sessions (path traversal). */
+    static String requireSafeId(String id) {
+        if (id == null || !SAFE_ID.matcher(id).matches()) {
+            throw new IllegalArgumentException("Mã phiên không hợp lệ");
+        }
+        return id;
+    }
+
+    /** Xóa log cũ hơn N ngày (mặc định 30; QT_LOG_RETENTION_DAYS=0 để giữ vĩnh viễn). Định dạng log_date: ddMMyyyy. */
+    private static void purgeOldLogs() {
+        int days = 30;
+        try {
+            String env = System.getenv("QT_LOG_RETENTION_DAYS");
+            if (env != null && !env.trim().isEmpty()) days = Integer.parseInt(env.trim());
+        } catch (NumberFormatException ignored) {}
+        if (days <= 0 || dbConn == null) return;
+        try {
+            SimpleDateFormat fmt = new SimpleDateFormat("ddMMyyyy");
+            StringBuilder in = new StringBuilder();
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            for (int i = 0; i < days; i++) {
+                if (in.length() > 0) in.append(',');
+                in.append('\'').append(fmt.format(cal.getTime())).append('\'');
+                cal.add(java.util.Calendar.DAY_OF_MONTH, -1);
+            }
+            synchronized (JasperHelperServer.class) {
+                try (java.sql.Statement st = dbConn.createStatement()) {
+                    // Chỉ xóa các dòng có log_date đúng định dạng 8 chữ số và nằm ngoài cửa sổ lưu giữ
+                    int removed = st.executeUpdate("DELETE FROM operation_logs WHERE length(log_date) = 8 " +
+                            "AND log_date GLOB '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]' AND log_date NOT IN (" + in + ")");
+                    if (removed > 0) System.out.println("[INFO] Đã xóa " + removed + " dòng log cũ hơn " + days + " ngày.");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[WARN] Không dọn được log cũ: " + e.getMessage());
+        }
+    }
 
     private static File getSessionsDirectory() {
         File dbFile = getDatabaseFile();
@@ -200,16 +311,7 @@ public class JasperHelperServer {
     static class WriteLogHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "POST, OPTIONS")) return;
 
             if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 exchange.sendResponseHeaders(405, -1);
@@ -280,16 +382,7 @@ public class JasperHelperServer {
     static class ListLogsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "GET, OPTIONS")) return;
 
             try {
                 initDatabase();
@@ -329,16 +422,7 @@ public class JasperHelperServer {
     static class GetLogHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "GET, OPTIONS")) return;
 
             try {
                 initDatabase();
@@ -397,16 +481,7 @@ public class JasperHelperServer {
     static class SaveSessionHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "POST, OPTIONS")) return;
 
             if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 exchange.sendResponseHeaders(405, -1);
@@ -428,7 +503,7 @@ public class JasperHelperServer {
                 }
 
                 JSONObject req = new JSONObject(body);
-                String id = req.optString("id", "session_" + System.currentTimeMillis());
+                String id = requireSafeId(req.optString("id", "session_" + System.currentTimeMillis()));
                 String sessionName = req.optString("name", "Báo cáo " + id);
                 String jrxmlName = req.optString("jrxmlName", "report.jrxml");
                 String jrxmlContent = req.optString("jrxmlContent", "");
@@ -510,16 +585,7 @@ public class JasperHelperServer {
     static class ListSessionsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "GET, OPTIONS")) return;
 
             try {
                 initDatabase();
@@ -628,16 +694,7 @@ public class JasperHelperServer {
     static class GetSessionHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "GET, OPTIONS")) return;
 
             try {
                 String query = exchange.getRequestURI().getQuery();
@@ -651,7 +708,7 @@ public class JasperHelperServer {
                     }
                 }
 
-                if (id == null || id.trim().isEmpty()) {
+                if (id == null || id.trim().isEmpty() || !SAFE_ID.matcher(id).matches()) {
                     exchange.sendResponseHeaders(400, -1);
                     exchange.close();
                     return;
@@ -714,13 +771,11 @@ public class JasperHelperServer {
     static class DeleteSessionHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
+            if (!Security.preflight(exchange, "POST, OPTIONS")) return;
 
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
+            // Thao tác xóa chỉ nhận POST (không cho GET để tránh bị kích hoạt qua thẻ <img>/liên kết)
+            if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
+                exchange.sendResponseHeaders(405, -1);
                 exchange.close();
                 return;
             }
@@ -754,6 +809,11 @@ public class JasperHelperServer {
                 }
 
                 if (id != null && !id.trim().isEmpty()) {
+                    if (!SAFE_ID.matcher(id).matches()) {
+                        exchange.sendResponseHeaders(400, -1);
+                        exchange.close();
+                        return;
+                    }
                     final String deleteId = id;
                     initDatabase();
                     if (dbConn != null) {
@@ -811,9 +871,10 @@ public class JasperHelperServer {
         }
         try {
             initDatabase();
+            purgeOldLogs();
         } catch (Exception ignored) {}
         int port = 8080;
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(java.net.InetAddress.getByName("127.0.0.1"), port), 0);
         server.createContext("/fill", new FillHandler());
         server.createContext("/logs", new LogHandler());
         server.createContext("/write-log", new WriteLogHandler());
@@ -833,16 +894,7 @@ public class JasperHelperServer {
     static class FillHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "POST, OPTIONS")) return;
 
             if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 exchange.sendResponseHeaders(405, -1);
@@ -1383,19 +1435,68 @@ public class JasperHelperServer {
         }
     }
 
+    /**
+     * Cập nhật extension (v1.2.0 - đã siết bảo mật).
+     *  - Chỉ nhận yêu cầu từ extension (xem Security.preflight).
+     *  - URL phải là HTTPS và thuộc danh sách host cho phép (GitHub); kiểm tra lại ở MỌI lần chuyển hướng.
+     *  - Bắt buộc có SHA-256 của gói; so khớp sau khi tải, sai là hủy, không giải nén gì cả.
+     *  - Chỉ giải nén các loại tệp tĩnh của extension (js/html/css/json/ảnh/font), từ chối .exe/.jar/.bat/.vbs/...
+     *  - Chặn zip-slip bằng đường dẫn chuẩn hóa; giới hạn dung lượng gói và tổng dung lượng giải nén.
+     * Lưu ý: SHA-256 lấy từ cùng kho với gói nên bảo vệ trước lỗi tải/giả mạo đường truyền và lệnh từ trang web lạ,
+     * nhưng không thay thế chữ ký số nếu chính kho phát hành bị chiếm quyền.
+     */
     static class UpdateExtensionHandler implements HttpHandler {
+        private static final long MAX_PACKAGE_BYTES = 120L * 1024 * 1024;
+        private static final long MAX_EXTRACT_BYTES = 400L * 1024 * 1024;
+        private static final java.util.Set<String> ALLOWED_EXT = new java.util.HashSet<>(java.util.Arrays.asList(
+                "js", "html", "css", "json", "png", "jpg", "jpeg", "svg", "ico", "ttf", "woff", "woff2", "map", "txt", "md"));
+        private static final java.util.Set<String> DEFAULT_HOSTS = new java.util.HashSet<>(java.util.Arrays.asList(
+                "raw.githubusercontent.com", "github.com", "objects.githubusercontent.com",
+                "release-assets.githubusercontent.com", "codeload.github.com"));
+
+        private static java.util.Set<String> allowedHosts() {
+            java.util.Set<String> hosts = new java.util.HashSet<>(DEFAULT_HOSTS);
+            String env = System.getenv("QT_UPDATE_HOSTS");
+            if (env != null) {
+                for (String h : env.split(",")) {
+                    String t = h.trim().toLowerCase();
+                    if (!t.isEmpty()) hosts.add(t);
+                }
+            }
+            return hosts;
+        }
+
+        static boolean isAllowedUpdateUrl(String url) {
+            try {
+                URL u = new URL(url);
+                return "https".equalsIgnoreCase(u.getProtocol()) && u.getHost() != null
+                        && allowedHosts().contains(u.getHost().toLowerCase());
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        static String extensionOf(String name) {
+            int dot = name.lastIndexOf('.');
+            int slash = name.lastIndexOf('/');
+            return (dot > slash && dot >= 0) ? name.substring(dot + 1).toLowerCase() : "";
+        }
+
+        static boolean isProtectedName(String lower) {
+            return lower.equals("query_tool_logs.db") || lower.startsWith("query_tool_logs.db-") ||
+                    lower.startsWith("report_sessions/") || lower.equals("report_sessions") ||
+                    lower.endsWith(".log") || lower.startsWith("update_temp_");
+        }
+
+        private static String toHex(byte[] bytes) {
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) sb.append(String.format("%02x", b));
+            return sb.toString();
+        }
+
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Request-Private-Network");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Private-Network", "true");
-
-            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-                exchange.sendResponseHeaders(204, -1);
-                exchange.close();
-                return;
-            }
+            if (!Security.preflight(exchange, "POST, OPTIONS")) return;
 
             if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 sendJsonResponse(exchange, 405, "{\"success\":false,\"error\":\"Method not allowed\"}");
@@ -1410,23 +1511,31 @@ public class JasperHelperServer {
                 int n;
                 while ((n = is.read(b)) != -1) {
                     reqBuf.write(b, 0, n);
+                    if (reqBuf.size() > 65536) {
+                        sendJsonResponse(exchange, 413, "{\"success\":false,\"error\":\"Request too large\"}");
+                        return;
+                    }
                 }
-                String requestBody = new String(reqBuf.toByteArray(), StandardCharsets.UTF_8);
-                String downloadUrl = null;
+                JSONObject json;
                 try {
-                    JSONObject json = new JSONObject(requestBody);
-                    if (json.has("downloadUrl")) {
-                        downloadUrl = json.getString("downloadUrl");
-                    }
+                    json = new JSONObject(new String(reqBuf.toByteArray(), StandardCharsets.UTF_8));
                 } catch (Exception parseErr) {
-                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"downloadUrl\"\\s*:\\s*\"([^\"]+)\"").matcher(requestBody);
-                    if (m.find()) {
-                        downloadUrl = m.group(1).replace("\\/", "/");
-                    }
+                    sendJsonResponse(exchange, 400, "{\"success\":false,\"error\":\"Invalid JSON\"}");
+                    return;
                 }
+                String downloadUrl = json.optString("downloadUrl", "").trim();
+                String expectedSha = json.optString("sha256", "").trim().toLowerCase();
 
-                if (downloadUrl == null || downloadUrl.trim().isEmpty()) {
+                if (downloadUrl.isEmpty()) {
                     sendJsonResponse(exchange, 400, "{\"success\":false,\"error\":\"downloadUrl is required\"}");
+                    return;
+                }
+                if (!isAllowedUpdateUrl(downloadUrl)) {
+                    sendJsonResponse(exchange, 403, "{\"success\":false,\"error\":\"URL cập nhật không thuộc danh sách máy chủ được phép (chỉ HTTPS tới GitHub).\"}");
+                    return;
+                }
+                if (!expectedSha.matches("^[0-9a-f]{64}$")) {
+                    sendJsonResponse(exchange, 400, "{\"success\":false,\"error\":\"Thiếu hoặc sai định dạng SHA-256 của gói cập nhật.\"}");
                     return;
                 }
 
@@ -1435,30 +1544,41 @@ public class JasperHelperServer {
                     sendJsonResponse(exchange, 500, "{\"success\":false,\"error\":\"Extension directory not found\"}");
                     return;
                 }
+                String extRoot = extDir.getCanonicalPath() + File.separator;
 
                 tempZip = new File(extDir, "update_temp_" + System.currentTimeMillis() + ".zip");
-                String currentUrl = downloadUrl.trim();
+                String currentUrl = downloadUrl;
                 HttpURLConnection conn = null;
 
-                // Follow HTTP/HTTPS redirects (e.g. GitHub Releases 302 to S3/CDN)
-                for (int redirectCount = 0; redirectCount < 8; redirectCount++) {
+                // Theo dõi chuyển hướng (GitHub Releases -> CDN) nhưng kiểm tra lại từng chặng
+                for (int redirectCount = 0; ; redirectCount++) {
+                    if (redirectCount >= 8) {
+                        sendJsonResponse(exchange, 502, "{\"success\":false,\"error\":\"Quá nhiều lần chuyển hướng\"}");
+                        return;
+                    }
                     URL u = new URL(currentUrl);
                     conn = (HttpURLConnection) u.openConnection();
-                    conn.setRequestProperty("User-Agent", "QueryTool-AutoUpdater/1.0");
-                    conn.setInstanceFollowRedirects(true);
+                    conn.setRequestProperty("User-Agent", "QueryTool-AutoUpdater/1.2");
+                    conn.setInstanceFollowRedirects(false);
                     conn.setConnectTimeout(20000);
                     conn.setReadTimeout(90000);
 
                     int status = conn.getResponseCode();
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || 
-                        status == HttpURLConnection.HTTP_MOVED_PERM || 
-                        status == 307 || status == 308) {
-                        String newLocation = conn.getHeaderField("Location");
-                        if (newLocation != null && !newLocation.isEmpty()) {
-                            currentUrl = newLocation;
-                            conn.disconnect();
-                            continue;
+                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM ||
+                            status == HttpURLConnection.HTTP_SEE_OTHER || status == 307 || status == 308) {
+                        String loc = conn.getHeaderField("Location");
+                        conn.disconnect();
+                        if (loc == null || loc.isEmpty()) {
+                            sendJsonResponse(exchange, 502, "{\"success\":false,\"error\":\"Chuyển hướng không hợp lệ\"}");
+                            return;
                         }
+                        String next = new URL(new URL(currentUrl), loc).toString();
+                        if (!isAllowedUpdateUrl(next)) {
+                            sendJsonResponse(exchange, 403, "{\"success\":false,\"error\":\"Bị chuyển hướng tới máy chủ không được phép.\"}");
+                            return;
+                        }
+                        currentUrl = next;
+                        continue;
                     }
                     if (status != 200) {
                         sendJsonResponse(exchange, 502, "{\"success\":false,\"error\":\"Download failed with HTTP " + status + "\"}");
@@ -1467,17 +1587,33 @@ public class JasperHelperServer {
                     break;
                 }
 
-                // Stream content to temporary zip file
+                // Tải về tệp tạm, vừa tải vừa băm SHA-256, giới hạn dung lượng
+                java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                long total = 0;
                 try (InputStream in = conn.getInputStream(); OutputStream out = new FileOutputStream(tempZip)) {
                     byte[] buffer = new byte[16384];
                     int bytesRead;
                     while ((bytesRead = in.read(buffer)) != -1) {
+                        total += bytesRead;
+                        if (total > MAX_PACKAGE_BYTES) {
+                            sendJsonResponse(exchange, 413, "{\"success\":false,\"error\":\"Gói cập nhật vượt quá dung lượng cho phép\"}");
+                            return;
+                        }
+                        md.update(buffer, 0, bytesRead);
                         out.write(buffer, 0, bytesRead);
                     }
                 }
+                String actualSha = toHex(md.digest());
+                if (!actualSha.equals(expectedSha)) {
+                    System.err.println("[SECURITY] SHA-256 không khớp. Mong đợi " + expectedSha + ", thực tế " + actualSha);
+                    sendJsonResponse(exchange, 400, "{\"success\":false,\"error\":\"Mã SHA-256 của gói không khớp. Đã hủy cập nhật, không có tệp nào bị ghi đè.\"}");
+                    return;
+                }
 
-                // Extract zip into extDir, strictly protecting database, logs, and report sessions
+                // Giải nén có chọn lọc
                 int extractedCount = 0;
+                int skippedCount = 0;
+                long extractedBytes = 0;
                 try (ZipInputStream zis = new ZipInputStream(new FileInputStream(tempZip))) {
                     ZipEntry entry;
                     while ((entry = zis.getNextEntry()) != null) {
@@ -1485,27 +1621,33 @@ public class JasperHelperServer {
                         if (entryName.startsWith("code/")) {
                             entryName = entryName.substring(5);
                         }
-                        if (entryName.isEmpty() || entryName.contains("..")) {
+                        if (entryName.isEmpty() || entryName.startsWith("/") || entryName.contains("..") || entryName.contains(":")) {
+                            skippedCount++;
                             zis.closeEntry();
                             continue;
                         }
-
-                        // STRICT DATA PROTECTION: Do not overwrite SQLite db, log files or user report sessions
                         String lower = entryName.toLowerCase();
-                        if (lower.equals("query_tool_logs.db") || lower.startsWith("query_tool_logs.db-") ||
-                            lower.startsWith("report_sessions/") || lower.equals("report_sessions") ||
-                            lower.endsWith(".log") || lower.startsWith("update_temp_")) {
+                        if (isProtectedName(lower)) {   // Không bao giờ ghi đè DB, log, phiên báo cáo
+                            zis.closeEntry();
+                            continue;
+                        }
+                        if (entry.isDirectory() || entryName.endsWith("/")) {
+                            zis.closeEntry();
+                            continue;
+                        }
+                        if (!ALLOWED_EXT.contains(extensionOf(lower))) {
+                            System.err.println("[SECURITY] Bỏ qua tệp không thuộc loại cho phép: " + entryName);
+                            skippedCount++;
                             zis.closeEntry();
                             continue;
                         }
 
                         File targetFile = new File(extDir, entryName);
-                        if (entry.isDirectory() || entryName.endsWith("/") || targetFile.isDirectory()) {
-                            targetFile.mkdirs();
+                        if (!targetFile.getCanonicalPath().startsWith(extRoot)) {   // zip-slip
+                            skippedCount++;
                             zis.closeEntry();
                             continue;
                         }
-
                         File parent = targetFile.getParentFile();
                         if (parent != null && !parent.exists()) {
                             parent.mkdirs();
@@ -1514,6 +1656,10 @@ public class JasperHelperServer {
                             byte[] buffer = new byte[16384];
                             int len;
                             while ((len = zis.read(buffer)) != -1) {
+                                extractedBytes += len;
+                                if (extractedBytes > MAX_EXTRACT_BYTES) {
+                                    throw new IOException("Dung lượng giải nén vượt giới hạn");
+                                }
                                 fos.write(buffer, 0, len);
                             }
                         }
@@ -1522,12 +1668,14 @@ public class JasperHelperServer {
                     }
                 }
 
-                sendJsonResponse(exchange, 200, "{\"success\":true,\"extractedFiles\":" + extractedCount + ",\"message\":\"Extension updated successfully\"}");
+                sendJsonResponse(exchange, 200, "{\"success\":true,\"extractedFiles\":" + extractedCount + ",\"skippedFiles\":" + skippedCount + ",\"message\":\"Extension updated successfully\"}");
             } catch (Throwable e) {
                 e.printStackTrace();
                 String msg = (e.getMessage() != null) ? e.getMessage() : e.toString();
                 msg = msg.replace("\\", "\\\\").replace("\"", "\\\"");
-                sendJsonResponse(exchange, 500, "{\"success\":false,\"error\":\"" + msg + "\"}");
+                try {
+                    sendJsonResponse(exchange, 500, "{\"success\":false,\"error\":\"" + msg + "\"}");
+                } catch (Exception ignored) {}
             } finally {
                 if (tempZip != null && tempZip.exists()) {
                     try {

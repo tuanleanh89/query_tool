@@ -12,3 +12,11 @@ target/
 .vs/
 [Bb]in/
 [Oo]bj/
+
+# Ban sao luu truoc khi nang cap (co the chua thong tin cu)
+backup_*/
+
+# Thu muc tai khoan/du lieu cuc bo
+**/report_sessions/session_*.json
+**/report_sessions/*.jrxml
+**/query_tool_logs.db

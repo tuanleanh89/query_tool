@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Clean Release Packaging Script
 # Excludes database logs, user report sessions, and temporary files
 # ==============================================================================
@@ -36,9 +36,19 @@ Write-Host "[1/4] Copying clean source files (excluding db, logs, sessions)..." 
 $includeFiles = @(
     "manifest.json",
     "background.js",
+    "sql_utils.js",
     "content.js",
     "ui.html",
+    "ui_state.js",
+    "ui_core.js",
     "ui.js",
+    "ui_tabs.js",
+    "ui_query.js",
+    "ui_units.js",
+    "ui_system.js",
+    "ui_tables.js",
+    "ui_sessions.js",
+    "ui_search.js",
     "sites_data.json",
     "sql-formatter.min.js",
     "sweetalert2.all.min.js",
@@ -75,19 +85,27 @@ Copy-Item -Path $chromeZip -Destination $firefoxXpi -Force
 # Clean up temp folder
 Remove-Item -Path $tempPackDir -Recurse -Force
 
-# 6. Generate version.json
+# 6. Generate version.json (kem SHA-256 de Jasper Helper xac minh goi truoc khi giai nen)
 Write-Host "[4/4] Generating version.json..." -ForegroundColor Yellow
 $today = (Get-Date).ToString("yyyy-MM-dd")
+$chromeHash = (Get-FileHash -Path $chromeZip -Algorithm SHA256).Hash.ToLower()
+$firefoxHash = (Get-FileHash -Path $firefoxXpi -Algorithm SHA256).Hash.ToLower()
 $versionObj = [ordered]@{
     "version" = $currentVer
     "release_date" = $today
     "changelog" = @(
-        "Cap nhat tinh nang va toi uu hoa hieu nang",
-        "Tu dong dong bo va bao luu 100% lich su lam viec"
+        "Bao mat: tai khoan he thong khong con nam trong ma nguon, cau hinh qua nut Tai khoan",
+        "Bao mat: Jasper Helper chi nhan ket noi tu extension, cap nhat bat buoc xac minh SHA-256",
+        "An toan SQL: phan tich lenh nguy hiem chinh xac hon, them che do Chi doc",
+        "Sua loi: khong chay lai lenh ghi khi gap loi thong thuong, phan trang an toan voi dau cham phay va comment"
     )
     "download_urls" = [ordered]@{
         "chrome" = "https://raw.githubusercontent.com/tuanleanh89/query_tool/main/query_tool_chrome.zip"
         "firefox" = "https://raw.githubusercontent.com/tuanleanh89/query_tool/main/query_tool.xpi"
+    }
+    "sha256" = [ordered]@{
+        "chrome" = $chromeHash
+        "firefox" = $firefoxHash
     }
 }
 
